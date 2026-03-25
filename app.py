@@ -122,7 +122,7 @@ with tab_summarize:
                 )
                 ref_summary = samples[idx]["summary"]
 
-        generate_btn = st.button("🚀 Generate Summary", use_container_width=True)
+        generate_btn = st.button("🚀 Generate Summary")
 
     with col_output:
         st.markdown("#### 📋 Generated Summaries")
@@ -204,7 +204,6 @@ with tab_summarize:
                         data=ext_summary,
                         file_name="extractive_summary.txt",
                         mime="text/plain",
-                        use_container_width=True,
                     )
                 with dl_col2:
                     st.download_button(
@@ -212,7 +211,6 @@ with tab_summarize:
                         data=abs_summary,
                         file_name="abstractive_summary.txt",
                         mime="text/plain",
-                        use_container_width=True,
                     )
 
                 st.download_button(
@@ -220,7 +218,6 @@ with tab_summarize:
                     data=combined,
                     file_name="summaries.txt",
                     mime="text/plain",
-                    use_container_width=True,
                 )
 
                 # ── ROUGE scores ──────────────────────────────────────────────
@@ -233,29 +230,28 @@ with tab_summarize:
                     r_col1, r_col2 = st.columns(2)
                     with r_col1:
                         st.markdown("**Extractive ROUGE**")
-                        st.dataframe(rouge_scores_to_df(rouge_ext), use_container_width=True)
+                        st.dataframe(rouge_scores_to_df(rouge_ext))
                     with r_col2:
                         st.markdown("**Abstractive ROUGE**")
-                        st.dataframe(rouge_scores_to_df(rouge_abs), use_container_width=True)
+                        st.dataframe(rouge_scores_to_df(rouge_abs))
 
                     fig_rouge = plot_rouge_scores(
                         {"extractive": rouge_ext, "abstractive": rouge_abs}
                     )
-                    st.pyplot(fig_rouge, use_container_width=True)
+                    st.pyplot(fig_rouge)
                     plt.close(fig_rouge)
 
                 # ── Length comparison chart ───────────────────────────────────
                 st.markdown("---")
                 st.markdown("#### 📊 Summary Length Comparison")
                 fig_len = plot_summary_length_comparison(user_text, ext_summary, abs_summary)
-                st.pyplot(fig_len, use_container_width=True)
+                st.pyplot(fig_len)
 
                 st.download_button(
                     "⬇️ Download Chart (PNG)",
                     data=fig_to_bytes(fig_len),
                     file_name="length_comparison.png",
                     mime="image/png",
-                    use_container_width=True,
                 )
                 plt.close(fig_len)
 
