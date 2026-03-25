@@ -1,14 +1,4 @@
-"""
-utils.py
---------
-Utility functions for:
-  • ROUGE evaluation (ROUGE-1, ROUGE-2, ROUGE-L)
-  • Visualization (length distributions, summary comparison chart)
-  • Miscellaneous helpers
-"""
-
 from __future__ import annotations
-
 import io
 from collections import Counter
 
@@ -19,20 +9,12 @@ import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  ROUGE SCORER
-# ─────────────────────────────────────────────────────────────────────────────
-
 def _ngrams(tokens: list, n: int) -> Counter:
-    """Return a Counter of n-grams from a token list."""
     return Counter(tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1))
 
 
 def _lcs_length(a: list, b: list) -> int:
-    """Compute length of the Longest Common Subsequence of two token lists."""
     m, n = len(a), len(b)
-    # Use only 1-D DP to save memory
     prev = [0] * (n + 1)
     for i in range(1, m + 1):
         curr = [0] * (n + 1)
@@ -46,7 +28,6 @@ def _lcs_length(a: list, b: list) -> int:
 
 
 def _rouge_n(hypothesis: str, reference: str, n: int) -> dict:
-    """Compute ROUGE-N precision, recall, and F1."""
     hyp_tokens = hypothesis.lower().split()
     ref_tokens = reference.lower().split()
 
@@ -62,7 +43,6 @@ def _rouge_n(hypothesis: str, reference: str, n: int) -> dict:
 
 
 def _rouge_l(hypothesis: str, reference: str) -> dict:
-    """Compute ROUGE-L using the LCS approach."""
     hyp_tokens = hypothesis.lower().split()
     ref_tokens = reference.lower().split()
 
@@ -75,19 +55,6 @@ def _rouge_l(hypothesis: str, reference: str) -> dict:
 
 
 def compute_rouge(hypothesis: str, reference: str) -> dict:
-    """
-    Compute ROUGE-1, ROUGE-2, and ROUGE-L scores.
-
-    Parameters
-    ----------
-    hypothesis : Generated / predicted summary.
-    reference  : Ground-truth / reference summary.
-
-    Returns
-    -------
-    dict with keys 'rouge1', 'rouge2', 'rougeL', each containing
-    sub-keys 'precision', 'recall', 'f1'.
-    """
     return {
         "rouge1": _rouge_n(hypothesis, reference, 1),
         "rouge2": _rouge_n(hypothesis, reference, 2),
@@ -96,7 +63,6 @@ def compute_rouge(hypothesis: str, reference: str) -> dict:
 
 
 def rouge_scores_to_df(rouge_dict: dict) -> pd.DataFrame:
-    """Convert ROUGE score dict to a tidy DataFrame for display."""
     rows = []
     for metric, scores in rouge_dict.items():
         rows.append(
@@ -110,11 +76,6 @@ def rouge_scores_to_df(rouge_dict: dict) -> pd.DataFrame:
     return pd.DataFrame(rows).set_index("Metric")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  VISUALIZATION HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Shared color palette
 PALETTE = {
     "primary":    "#6C63FF",
     "secondary":  "#FF6584",
@@ -127,7 +88,6 @@ PALETTE = {
 
 
 def _apply_dark_style(fig: plt.Figure, ax):
-    """Apply a consistent dark theme to a figure/axis."""
     fig.patch.set_facecolor(PALETTE["bg"])
     ax.set_facecolor(PALETTE["surface"])
     ax.tick_params(colors=PALETTE["text"], labelsize=10)
@@ -139,17 +99,6 @@ def _apply_dark_style(fig: plt.Figure, ax):
 
 
 def plot_text_length_distribution(df: pd.DataFrame) -> plt.Figure:
-    """
-    Plot the word-count distribution of articles and summaries.
-
-    Parameters
-    ----------
-    df : DataFrame with 'text' and 'summary' columns.
-
-    Returns
-    -------
-    matplotlib Figure object.
-    """
     article_lengths = df["text"].str.split().str.len()
     summary_lengths = df["summary"].str.split().str.len()
 
@@ -180,10 +129,6 @@ def plot_summary_length_comparison(
     extractive_summary: str,
     abstractive_summary: str,
 ) -> plt.Figure:
-    """
-    Bar chart comparing word counts of original text, extractive, and abstractive
-    summaries — plus reduction percentages.
-    """
     labels   = ["Original Text", "Extractive\nSummary", "Abstractive\nSummary"]
     counts   = [
         len(original_text.split()),
@@ -195,7 +140,6 @@ def plot_summary_length_comparison(
     fig, ax = plt.subplots(figsize=(8, 5))
     bars = ax.bar(labels, counts, color=colors, width=0.5, edgecolor="none")
 
-    # Annotate bars with word count
     for bar, count in zip(bars, counts):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
@@ -205,7 +149,6 @@ def plot_summary_length_comparison(
             color=PALETTE["text"], fontsize=11, fontweight="bold",
         )
 
-    # Reduction % labels for summaries
     orig = counts[0]
     for i in [1, 2]:
         pct = round((1 - counts[i] / orig) * 100, 1) if orig else 0
@@ -226,17 +169,6 @@ def plot_summary_length_comparison(
 
 
 def plot_rouge_scores(rouge_dict: dict) -> plt.Figure:
-    """
-    Grouped bar chart of ROUGE precision / recall / F1
-    for both extractive and abstractive summaries.
-
-    Parameters
-    ----------
-    rouge_dict : {
-        'extractive': { 'rouge1': {...}, 'rouge2': {...}, 'rougeL': {...} },
-        'abstractive': { ... }
-    }
-    """
     metrics   = ["ROUGE-1", "ROUGE-2", "ROUGE-L"]
     sub_keys  = ["rouge1", "rouge2", "rougeL"]
     methods   = list(rouge_dict.keys())
@@ -280,7 +212,6 @@ def plot_rouge_scores(rouge_dict: dict) -> plt.Figure:
 
 
 def fig_to_bytes(fig: plt.Figure) -> bytes:
-    """Serialize a matplotlib Figure to PNG bytes (for Streamlit download)."""
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
     buf.seek(0)

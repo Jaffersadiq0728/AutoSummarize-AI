@@ -1,29 +1,9 @@
-"""
-app.py
-------
-Streamlit-based front-end for the Automated Text Summarization System.
-
-Run with:
-    streamlit run app.py
-
-Features:
-  • Extractive summarization (TF-IDF sentence scoring)
-  • Abstractive summarization (T5-small transformer)
-  • ROUGE-1 / ROUGE-2 / ROUGE-L evaluation (when reference is provided)
-  • Word-count reduction percentage
-  • Interactive charts: length distribution & summary comparison
-  • Download summary as .txt
-  • Dataset explorer (loads Kaggle News Summary dataset)
-"""
-
 import io
 import textwrap
-
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# ── Local modules ─────────────────────────────────────────────────────────────
 from preprocessing import word_count, reduction_percentage
 from model import get_extractive_summary, get_abstractive_summary
 from utils import (
@@ -37,152 +17,41 @@ from utils import (
 )
 from dataset import get_sample_texts
 
-# ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="AutoSummarize AI",
     page_icon="📰",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown(
     """
     <style>
-    /* ── Google Font ── */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* ── Background ── */
-    .stApp {
-        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-        color: #e0e0ff;
-    }
-
-    /* ── Sidebar ── */
-    section[data-testid="stSidebar"] {
-        background: rgba(30, 30, 50, 0.95);
-        border-right: 1px solid rgba(108, 99, 255, 0.3);
-    }
-
-    /* ── Cards ── */
-    .summary-card {
-        background: rgba(42, 42, 62, 0.85);
-        border: 1px solid rgba(108, 99, 255, 0.4);
-        border-radius: 16px;
-        padding: 1.4rem 1.6rem;
-        margin-bottom: 1rem;
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-    }
-
-    /* ── Metric boxes ── */
-    .metric-row {
-        display: flex;
-        gap: 1rem;
-        margin: 0.8rem 0;
-    }
-    .metric-box {
-        flex: 1;
-        background: rgba(108, 99, 255, 0.12);
-        border: 1px solid rgba(108, 99, 255, 0.35);
-        border-radius: 12px;
-        padding: 0.9rem 1rem;
-        text-align: center;
-    }
-    .metric-label {
-        font-size: 0.75rem;
-        color: #888aaa;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 0.3rem;
-    }
-    .metric-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #6C63FF;
-    }
-
-    /* ── Badge ── */
-    .badge {
-        display: inline-block;
-        padding: 0.2rem 0.7rem;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.5rem;
-    }
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    .stApp { background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); color: #e0e0ff; }
+    section[data-testid="stSidebar"] { background: rgba(30, 30, 50, 0.95); border-right: 1px solid rgba(108, 99, 255, 0.3); }
+    .summary-card { background: rgba(42, 42, 62, 0.85); border: 1px solid rgba(108, 99, 255, 0.4); border-radius: 16px; padding: 1.4rem 1.6rem; margin-bottom: 1rem; backdrop-filter: blur(8px); box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+    .metric-row { display: flex; gap: 1rem; margin: 0.8rem 0; }
+    .metric-box { flex: 1; background: rgba(108, 99, 255, 0.12); border: 1px solid rgba(108, 99, 255, 0.35); border-radius: 12px; padding: 0.9rem 1rem; text-align: center; }
+    .metric-label { font-size: 0.75rem; color: #888aaa; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+    .metric-value { font-size: 1.5rem; font-weight: 700; color: #6C63FF; }
+    .badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
     .badge-extractive  { background: rgba(108,99,255,0.25); color: #6C63FF; border: 1px solid #6C63FF; }
     .badge-abstractive { background: rgba(255,101,132,0.25); color: #FF6584; border: 1px solid #FF6584; }
-
-    /* ── Hero title ── */
-    .hero-title {
-        font-size: 2.8rem;
-        font-weight: 700;
-        background: linear-gradient(90deg, #6C63FF, #FF6584, #43B89C);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
-    }
-    .hero-sub {
-        color: #888aaa;
-        font-size: 1.05rem;
-        margin-bottom: 2rem;
-    }
-
-    /* ── Buttons ── */
-    .stButton > button {
-        background: linear-gradient(90deg, #6C63FF, #FF6584);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 0.6rem 2rem;
-        font-size: 1rem;
-        font-weight: 600;
-        transition: opacity 0.2s;
-    }
+    .hero-title { font-size: 2.8rem; font-weight: 700; background: linear-gradient(90deg, #6C63FF, #FF6584, #43B89C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.2rem; }
+    .hero-sub { color: #888aaa; font-size: 1.05rem; margin-bottom: 2rem; }
+    .stButton > button { background: linear-gradient(90deg, #6C63FF, #FF6584); color: white; border: none; border-radius: 12px; padding: 0.6rem 2rem; font-size: 1rem; font-weight: 600; transition: opacity 0.2s; }
     .stButton > button:hover { opacity: 0.88; }
-
-    /* ── Text area ── */
-    textarea {
-        background: rgba(30, 30, 50, 0.9) !important;
-        border: 1px solid rgba(108,99,255,0.4) !important;
-        border-radius: 12px !important;
-        color: #e0e0ff !important;
-        font-size: 0.95rem !important;
-    }
-
-    /* ── Tabs ── */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
-        background: transparent;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background: rgba(42,42,62,0.7);
-        border-radius: 10px 10px 0 0;
-        border: 1px solid rgba(108,99,255,0.2);
-        color: #888aaa;
-        font-weight: 600;
-    }
-    .stTabs [aria-selected="true"] {
-        background: rgba(108,99,255,0.2) !important;
-        color: #e0e0ff !important;
-        border-color: #6C63FF !important;
-    }
-
-    /* ── Divider ── */
+    textarea { background: rgba(30, 30, 50, 0.9) !important; border: 1px solid rgba(108,99,255,0.4) !important; border-radius: 12px !important; color: #e0e0ff !important; font-size: 0.95rem !important; }
+    .stTabs [data-baseweb="tab-list"] { gap: 1rem; background: transparent; }
+    .stTabs [data-baseweb="tab"] { background: rgba(42,42,62,0.7); border-radius: 10px 10px 0 0; border: 1px solid rgba(108,99,255,0.2); color: #888aaa; font-weight: 600; }
+    .stTabs [aria-selected="true"] { background: rgba(108,99,255,0.2) !important; color: #e0e0ff !important; border-color: #6C63FF !important; }
     hr { border-color: rgba(108,99,255,0.2); }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-
-# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ⚙️ Settings")
     st.markdown("---")
@@ -219,16 +88,9 @@ st.markdown(
 )
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab_summarize, tab_dataset, tab_about = st.tabs(
-    ["✨ Summarize", "📊 Dataset Explorer", "ℹ️ About"]
-)
+tab_summarize, = st.tabs(["✨ Summarize"])
 
-
-# ════════════════════════════════════════════════════════════
-#  TAB 1 – SUMMARIZE
-# ════════════════════════════════════════════════════════════
 with tab_summarize:
-    # Pre-fill text area from sample picker
     default_text = ""
     if selected_sample != "None":
         idx = sample_labels.index(selected_sample)
@@ -399,129 +261,3 @@ with tab_summarize:
 
         else:
             st.info("👈 Enter your text and press **Generate Summary** to begin.")
-
-
-# ════════════════════════════════════════════════════════════
-#  TAB 2 – DATASET EXPLORER
-# ════════════════════════════════════════════════════════════
-with tab_dataset:
-    st.markdown("### 📊 Dataset Explorer — Kaggle News Summary")
-    st.markdown(
-        """
-        **Dataset:** [News Summary](https://www.kaggle.com/datasets/sunnysai12345/news-summary)
-        by Sunny Sai on Kaggle  
-        **Columns used:** `Complete Article` (text) · `Headlines` (summary)
-        """
-    )
-
-    st.info(
-        "To use this tab, download the dataset from Kaggle and place "
-        "`news_summary.csv` in the `data/` folder, **or** run `python dataset.py` "
-        "with your Kaggle API credentials configured.",
-        icon="ℹ️",
-    )
-
-    load_btn = st.button("📂 Load Dataset (from data/news_summary.csv)")
-
-    if load_btn:
-        try:
-            from dataset import load_dataset
-            with st.spinner("Loading and cleaning dataset …"):
-                df = load_dataset(max_rows=3000)
-
-            st.success(f"✅ Loaded {len(df):,} rows.")
-            st.dataframe(df.head(20), use_container_width=True)
-
-            # ── Length stats ──────────────────────────────────────────────────
-            st.markdown("#### 📈 Statistics")
-            stats_col1, stats_col2 = st.columns(2)
-
-            article_wc = df["text"].str.split().str.len()
-            summary_wc = df["summary"].str.split().str.len()
-
-            with stats_col1:
-                st.metric("Avg. Article Length", f"{article_wc.mean():.0f} words")
-                st.metric("Max Article Length",  f"{article_wc.max():,} words")
-            with stats_col2:
-                st.metric("Avg. Summary Length", f"{summary_wc.mean():.0f} words")
-                st.metric("Max Summary Length",  f"{summary_wc.max():,} words")
-
-            # ── Visualizations ────────────────────────────────────────────────
-            st.markdown("#### 📉 Word Count Distributions")
-            fig_dist = plot_text_length_distribution(df)
-            st.pyplot(fig_dist, use_container_width=True)
-            plt.close(fig_dist)
-
-        except FileNotFoundError:
-            st.error(
-                "Dataset file not found. Please download it first:\n\n"
-                "```bash\n"
-                "pip install kaggle\n"
-                "python dataset.py\n"
-                "```"
-            )
-        except Exception as e:
-            st.error(f"Error loading dataset: {e}")
-
-
-# ════════════════════════════════════════════════════════════
-#  TAB 3 – ABOUT
-# ════════════════════════════════════════════════════════════
-with tab_about:
-    st.markdown("### ℹ️ About AutoSummarize AI")
-    st.markdown(
-        """
-        **AutoSummarize AI** is a complete end-to-end NLP summarization system
-        demonstrating both **extractive** and **abstractive** techniques.
-
-        ---
-
-        #### 🛠️ Tech Stack
-        | Component | Technology |
-        |---|---|
-        | Language | Python 3.9+ |
-        | ML Framework | HuggingFace Transformers, Scikit-learn |
-        | Model | Google T5-small |
-        | NLP | NLTK (tokenization, stopwords, lemmatization) |
-        | Vectorization | TF-IDF (sklearn) |
-        | Evaluation | Custom ROUGE-1 / 2 / L |
-        | Dataset | Kaggle News Summary |
-        | UI | Streamlit |
-        | Visualization | Matplotlib |
-
-        ---
-
-        #### 🧠 How It Works
-
-        **Extractive Summarization**
-        1. Split text into sentences
-        2. Vectorize with TF-IDF
-        3. Score each sentence by mean TF-IDF weight
-        4. Return top-N sentences in original order
-
-        **Abstractive Summarization (T5)**
-        1. Prepend `"summarize: "` task prefix
-        2. Tokenize & feed to T5-small (encoder-decoder transformer)
-        3. Beam-search decode a brand-new summary
-
-        ---
-
-        #### 📦 Project Structure
-        ```
-        ├── app.py              ← Streamlit UI (this file)
-        ├── model.py            ← Extractive + Abstractive models
-        ├── preprocessing.py    ← Text cleaning & tokenization
-        ├── utils.py            ← ROUGE scorer + visualizations
-        ├── dataset.py          ← Kaggle dataset loader
-        ├── data/
-        │   └── news_summary.csv   ← Kaggle dataset (download separately)
-        └── requirements.txt
-        ```
-
-        #### 🚀 Getting Started
-        ```bash
-        pip install -r requirements.txt
-        streamlit run app.py
-        ```
-        """
-    )

@@ -1,0 +1,77 @@
+﻿.\venv\Scripts\python.e
+xe : Warning: You are 
+sending 
+unauthenticated 
+requests to the HF 
+Hub. Please set a 
+HF_TOKEN to enable 
+higher rate limits and 
+faster downloads.
+At line:1 char:1
++ .\venv\Scripts\python
+.exe -c "import model; 
+model.get_abstractive_s
+um ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Warning: You    
+ ar...ster download    
+s.:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+[model] Loading T5-small into C:\Users\jaffe\Downloads\Automated Text Summarization System\hf_cache à
+
+Loading weights:   0%| 
+         | 0/131 
+[00:00<?, ?it/s]
+Loading weights: 
+100%|##########| 
+131/131 [00:00<00:00, 
+10137.52it/s]
+Traceback (most recent 
+call last):
+  File "<string>", 
+line 1, in <module>
+    import model; model
+.get_abstractive_summar
+y('Hello world.')
+                  ~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~^^^^^^^^^^^^^^^^
+  File "C:\Users\jaffe\
+Downloads\Automated 
+Text Summarization 
+System\model.py", line 
+218, in 
+get_abstractive_summary
+    return _abstractive
+_model.summarize(
+           ~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~^
+        text, 
+max_length=max_length, 
+min_length=min_length
+        ^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\jaffe\
+Downloads\Automated 
+Text Summarization 
+System\model.py", line 
+167, in summarize
+    model, tokenizer = 
+self._load_model()
+    ^^^^^^^^^^^^^^^^
+TypeError: cannot 
+unpack non-iterable 
+NoneType object
+[model] T5-small loaded successfully.
