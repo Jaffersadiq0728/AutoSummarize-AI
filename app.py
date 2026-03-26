@@ -17,243 +17,325 @@ from utils import (
 )
 from dataset import get_sample_texts
 
+# ── Page Configuration ────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="AutoSummarize AI",
-    page_icon="📰",
+    page_title="AutoSummarize AI | Professional NLP Toolkit",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ── Modern CSS Styling ────────────────────────────────────────────────────────
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .stApp { background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); color: #e0e0ff; }
-    section[data-testid="stSidebar"] { background: rgba(30, 30, 50, 0.95); border-right: 1px solid rgba(108, 99, 255, 0.3); }
-    .summary-card { background: rgba(42, 42, 62, 0.85); border: 1px solid rgba(108, 99, 255, 0.4); border-radius: 16px; padding: 1.4rem 1.6rem; margin-bottom: 1rem; backdrop-filter: blur(8px); box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
-    .metric-row { display: flex; gap: 1rem; margin: 0.8rem 0; }
-    .metric-box { flex: 1; background: rgba(108, 99, 255, 0.12); border: 1px solid rgba(108, 99, 255, 0.35); border-radius: 12px; padding: 0.9rem 1rem; text-align: center; }
-    .metric-label { font-size: 0.75rem; color: #888aaa; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
-    .metric-value { font-size: 1.5rem; font-weight: 700; color: #6C63FF; }
-    .badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-    .badge-extractive  { background: rgba(108,99,255,0.25); color: #6C63FF; border: 1px solid #6C63FF; }
-    .badge-abstractive { background: rgba(255,101,132,0.25); color: #FF6584; border: 1px solid #FF6584; }
-    .hero-title { font-size: 2.8rem; font-weight: 700; background: linear-gradient(90deg, #6C63FF, #FF6584, #43B89C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.2rem; }
-    .hero-sub { color: #888aaa; font-size: 1.05rem; margin-bottom: 2rem; }
-    .stButton > button { background: linear-gradient(90deg, #6C63FF, #FF6584); color: white; border: none; border-radius: 12px; padding: 0.6rem 2rem; font-size: 1rem; font-weight: 600; transition: opacity 0.2s; }
-    .stButton > button:hover { opacity: 0.88; }
-    textarea { background: rgba(30, 30, 50, 0.9) !important; border: 1px solid rgba(108,99,255,0.4) !important; border-radius: 12px !important; color: #e0e0ff !important; font-size: 0.95rem !important; }
-    .stTabs [data-baseweb="tab-list"] { gap: 1rem; background: transparent; }
-    .stTabs [data-baseweb="tab"] { background: rgba(42,42,62,0.7); border-radius: 10px 10px 0 0; border: 1px solid rgba(108,99,255,0.2); color: #888aaa; font-weight: 600; }
-    .stTabs [aria-selected="true"] { background: rgba(108,99,255,0.2) !important; color: #e0e0ff !important; border-color: #6C63FF !important; }
-    hr { border-color: rgba(108,99,255,0.2); }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+    
+    :root {
+        --primary-color: #6C63FF;
+        --secondary-color: #FF6584;
+        --bg-dark: #0f0f1a;
+        --surface-dark: #1a1a2e;
+        --text-main: #e0e0ff;
+        --text-muted: #888aaa;
+    }
+
+    html, body, [class*="css"] { font-family: 'Outfit', sans-serif; }
+    
+    .stApp { 
+        background: radial-gradient(circle at top right, #1a1a2e, #0f0f1a);
+        color: var(--text-main); 
+    }
+
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] { 
+        background: rgba(30, 30, 50, 0.95); 
+        border-right: 1px solid rgba(108, 99, 255, 0.2); 
+    }
+
+    /* Card Styling */
+    .summary-card { 
+        background: rgba(42, 42, 62, 0.6); 
+        border: 1px solid rgba(108, 99, 255, 0.3); 
+        border-radius: 20px; 
+        padding: 2rem; 
+        margin-bottom: 2rem; 
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        transition: transform 0.3s ease;
+    }
+    .summary-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+    }
+
+    /* Professional Headings */
+    .hero-container {
+        padding: 3rem 0;
+        text-align: center;
+    }
+    .hero-title { 
+        font-size: 3.5rem; 
+        font-weight: 800; 
+        background: linear-gradient(90deg, #6C63FF, #FF6584, #43B89C); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        margin-bottom: 0.5rem; 
+    }
+    .hero-sub { 
+        color: var(--text-muted); 
+        font-size: 1.2rem; 
+        max-width: 700px;
+        margin: 0 auto 2rem auto;
+    }
+
+    /* Badges */
+    .badge { 
+        display: inline-block; 
+        padding: 0.4rem 1rem; 
+        border-radius: 12px; 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        text-transform: uppercase;
+        margin-bottom: 1rem; 
+    }
+    .badge-extractive  { background: rgba(108,99,255,0.15); color: #6C63FF; border: 1px solid #6C63FF; }
+    .badge-abstractive { background: rgba(255,101,132,0.15); color: #FF6584; border: 1px solid #FF6584; }
+
+    /* Custom Input */
+    .stTextArea textarea {
+        background: rgba(20, 20, 35, 0.8) !important;
+        border: 1px solid rgba(108, 99, 255, 0.2) !important;
+        border-radius: 15px !important;
+        color: white !important;
+    }
+    
+    /* Metrics */
+    .metric-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .metric-item {
+        background: rgba(255,255,255,0.03);
+        padding: 1rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+    .metric-val {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+    .metric-lab {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    hr { border-color: rgba(108,99,255,0.1); }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+# ── Sidebar Settings ──────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## ⚙️ Settings")
+    st.image("https://img.icons8.com/isometric-folders/100/6C63FF/brain.png", width=60)
+    st.markdown("### Model Configuration")
     st.markdown("---")
 
-    st.markdown("### Extractive")
-    num_sentences = st.slider(
-        "Number of sentences", min_value=1, max_value=10, value=3, step=1
-    )
-
-    st.markdown("### Abstractive (T5)")
-    max_len = st.slider("Max summary length (tokens)", 60, 300, 150, 10)
-    min_len = st.slider("Min summary length (tokens)", 20, 100, 40, 5)
+    with st.expander("🛠️ Summarization Parameters", expanded=True):
+        st.markdown("**Extractive**")
+        num_sentences = st.slider("Sentence Count", 1, 10, 3)
+        
+        st.markdown("**Abstractive (T5)**")
+        max_len = st.slider("Max Length", 60, 300, 150)
+        min_len = st.slider("Min Length", 20, 100, 40)
 
     st.markdown("---")
-    st.markdown("### Example Articles")
+    st.markdown("### Quick Samples")
     samples = get_sample_texts()
-    sample_labels = ["🌕 Moon Water Ice", "🚗 EV Market Growth", "🏥 AI in Healthcare"]
-    selected_sample = st.selectbox("Load a sample article", ["None"] + sample_labels)
+    sample_labels = ["🌕 Moon Habitat", "🚗 EV Revolution", "🏥 AI Medical"]
+    selected_sample = st.selectbox("Load Example", ["None"] + sample_labels)
 
     st.markdown("---")
-    st.markdown(
-        "<small style='color:#888aaa'>Model: T5-small (HuggingFace)<br>"
-        "Dataset: Kaggle News Summary<br>"
-        "ROUGE: custom implementation</small>",
-        unsafe_allow_html=True,
-    )
+    st.info("💡 **Tip:** Abstractive summarization creates new sentences, while extractive selects the most relevant original ones.")
 
-
-# ── Hero Header ───────────────────────────────────────────────────────────────
-st.markdown('<div class="hero-title">📰 AutoSummarize AI</div>', unsafe_allow_html=True)
+# ── Hero Section ──────────────────────────────────────────────────────────────
 st.markdown(
-    '<div class="hero-sub">Extractive & Abstractive NLP summarization — powered by TF-IDF and T5</div>',
+    """
+    <div class="hero-container">
+        <div class="hero-title">AutoSummarize AI</div>
+        <div class="hero-sub">Enter your long-form text below and let our dual-engine NLP transform it into concise, high-impact summaries.</div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
-# ── Tabs ──────────────────────────────────────────────────────────────────────
-tab_summarize, = st.tabs(["✨ Summarize"])
+# ── Main Content Loop ─────────────────────────────────────────────────────────
+tab1, tab2 = st.tabs(["✨ Summarize", "📈 Analytics & Evaluation"])
 
-with tab_summarize:
-    default_text = ""
-    if selected_sample != "None":
-        idx = sample_labels.index(selected_sample)
-        default_text = samples[idx]["text"]
+default_text = ""
+if selected_sample != "None":
+    idx = sample_labels.index(selected_sample)
+    default_text = samples[idx]["text"]
 
-    col_input, col_output = st.columns([1, 1], gap="large")
+with tab1:
+    input_col, output_col = st.columns([1, 1.2], gap="large")
 
-    with col_input:
-        st.markdown("#### 📝 Input Article")
+    with input_col:
+        st.subheader("Input Text")
         user_text = st.text_area(
-            "Paste your long article here …",
+            "Article content",
             value=default_text,
-            height=320,
-            label_visibility="collapsed",
-            placeholder="Paste your article text here. The longer the better!",
+            height=400,
+            placeholder="Paste your content here (articles, reports, essays)...",
+            label_visibility="collapsed"
         )
-
-        # Optional reference summary for ROUGE evaluation
-        with st.expander("📌 Add Reference Summary (for ROUGE evaluation)"):
+        
+        # Reference summary for ROUGE
+        with st.expander("Optional: Reference Summary (for ROUGE scoring)"):
             ref_summary = st.text_area(
-                "Reference / ground-truth summary (optional)",
+                "Ground truth summary",
                 height=100,
-                placeholder="Paste the original summary to compute ROUGE scores …",
+                placeholder="Paste original summary if available..."
             )
             if selected_sample != "None" and not ref_summary:
                 idx = sample_labels.index(selected_sample)
-                st.caption(
-                    f"✅ Reference auto-loaded: *{samples[idx]['summary']}*"
-                )
                 ref_summary = samples[idx]["summary"]
+                st.caption(f"✅ Loaded reference for '{selected_sample}'")
 
-        generate_btn = st.button("🚀 Generate Summary")
+        process_btn = st.button("🚀 Process Summaries", use_container_width=True)
 
-    with col_output:
-        st.markdown("#### 📋 Generated Summaries")
-
-        if generate_btn:
+    with output_col:
+        st.subheader("Results")
+        if not process_btn and not default_text:
+            st.info("Waiting for input text... Paste an article and click process.")
+        
+        if process_btn:
             if not user_text.strip():
-                st.warning("Please enter or paste some text first.")
+                st.warning("Please provide input text first.")
             else:
-                # ── Extractive ───────────────────────────────────────────────
-                with st.spinner("Running extractive summarizer …"):
-                    ext_summary = get_extractive_summary(
-                        user_text, num_sentences=num_sentences
-                    )
+                progress_bar = st.progress(0)
+                
+                # 1. Extractive
+                try:
+                    progress_bar.progress(20, "Running Extractive Engine...")
+                    ext_summary = get_extractive_summary(user_text, num_sentences=num_sentences)
+                except Exception as e:
+                    st.error(f"Extractive Error: {e}")
+                    ext_summary = "Error generating extractive summary."
 
-                # ── Abstractive ──────────────────────────────────────────────
-                with st.spinner("Running T5 abstractive summarizer (may take ~15s first run) …"):
-                    abs_summary = get_abstractive_summary(
-                        user_text, max_length=max_len, min_length=min_len
-                    )
+                # 2. Abstractive
+                try:
+                    progress_bar.progress(50, "Running Neural Abstractive Engine (T5)...")
+                    abs_summary = get_abstractive_summary(user_text, max_length=max_len, min_length=min_len)
+                except Exception as e:
+                    st.error(f"Abstractive Error: {e}. Check if dependencies are installed correctly.")
+                    abs_summary = "Error generating abstractive summary."
 
-                # ── Word counts ──────────────────────────────────────────────
-                orig_wc = word_count(user_text)
-                ext_wc  = word_count(ext_summary)
-                abs_wc  = word_count(abs_summary)
+                progress_bar.progress(100, "Finalizing...")
+                
+                # Calculations
+                ext_wc = word_count(ext_summary)
+                abs_wc = word_count(abs_summary)
                 ext_red = reduction_percentage(user_text, ext_summary)
                 abs_red = reduction_percentage(user_text, abs_summary)
 
-                # ── Display extractive ────────────────────────────────────────
+                # Rendering
+                # Extractive Card
                 st.markdown(
                     f"""
                     <div class="summary-card">
-                      <span class="badge badge-extractive">EXTRACTIVE</span>
-                      <p style="color:#e0e0ff; font-size:0.97rem; line-height:1.7">{ext_summary}</p>
-                      <div class="metric-row">
-                        <div class="metric-box">
-                          <div class="metric-label">Words</div>
-                          <div class="metric-value">{ext_wc}</div>
+                        <span class="badge badge-extractive">Extractive Engine</span>
+                        <p style="font-size: 1.05rem; line-height: 1.6;">{ext_summary}</p>
+                        <div class="metric-container">
+                            <div class="metric-item">
+                                <div class="metric-val">{ext_wc}</div>
+                                <div class="metric-lab">Word Count</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-val" style="color: #43B89C">-{ext_red}%</div>
+                                <div class="metric-lab">Reduction</div>
+                            </div>
                         </div>
-                        <div class="metric-box">
-                          <div class="metric-label">Reduction</div>
-                          <div class="metric-value" style="color:#43B89C">{ext_red}%</div>
-                        </div>
-                      </div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
+                    """, 
+                    unsafe_allow_html=True
                 )
 
-                # ── Display abstractive ───────────────────────────────────────
+                # Abstractive Card
                 st.markdown(
                     f"""
                     <div class="summary-card">
-                      <span class="badge badge-abstractive">ABSTRACTIVE (T5)</span>
-                      <p style="color:#e0e0ff; font-size:0.97rem; line-height:1.7">{abs_summary}</p>
-                      <div class="metric-row">
-                        <div class="metric-box">
-                          <div class="metric-label">Words</div>
-                          <div class="metric-value" style="color:#FF6584">{abs_wc}</div>
+                        <span class="badge badge-abstractive">Neural Abstractive Engine</span>
+                        <p style="font-size: 1.05rem; line-height: 1.6;">{abs_summary}</p>
+                        <div class="metric-container">
+                            <div class="metric-item">
+                                <div class="metric-val" style="color: #FF6584">{abs_wc}</div>
+                                <div class="metric-lab">Word Count</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-val" style="color: #43B89C">-{abs_red}%</div>
+                                <div class="metric-lab">Reduction</div>
+                            </div>
                         </div>
-                        <div class="metric-box">
-                          <div class="metric-label">Reduction</div>
-                          <div class="metric-value" style="color:#43B89C">{abs_red}%</div>
-                        </div>
-                      </div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
+                    """, 
+                    unsafe_allow_html=True
                 )
 
-                # ── Download buttons ──────────────────────────────────────────
-                dl_col1, dl_col2 = st.columns(2)
-                combined = (
-                    f"=== EXTRACTIVE SUMMARY ===\n{ext_summary}\n\n"
-                    f"=== ABSTRACTIVE SUMMARY (T5) ===\n{abs_summary}\n"
-                )
-                with dl_col1:
-                    st.download_button(
-                        "⬇️ Download Extractive",
-                        data=ext_summary,
-                        file_name="extractive_summary.txt",
-                        mime="text/plain",
-                    )
-                with dl_col2:
-                    st.download_button(
-                        "⬇️ Download Abstractive",
-                        data=abs_summary,
-                        file_name="abstractive_summary.txt",
-                        mime="text/plain",
-                    )
+                # Store in session state for tab2
+                st.session_state['ext_summary'] = ext_summary
+                st.session_state['abs_summary'] = abs_summary
+                st.session_state['user_text'] = user_text
+                st.session_state['ref_summary'] = ref_summary
 
-                st.download_button(
-                    "📦 Download Both Summaries",
-                    data=combined,
-                    file_name="summaries.txt",
-                    mime="text/plain",
-                )
+with tab2:
+    if 'ext_summary' not in st.session_state:
+        st.info("Run a summary first to view detailed analytics.")
+    else:
+        st.subheader("System Performance & Comparison")
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("#### Visual Distribution")
+            fig_len = plot_summary_length_comparison(
+                st.session_state['user_text'], 
+                st.session_state['ext_summary'], 
+                st.session_state['abs_summary']
+            )
+            st.pyplot(fig_len)
+        
+        with c2:
+            st.markdown("#### Download Export")
+            combined = f"--- EXTRACTIVE ---\n{st.session_state['ext_summary']}\n\n--- ABSTRACTIVE ---\n{st.session_state['abs_summary']}"
+            st.download_button("📩 Download Summaries (.txt)", combined, "summaries.txt")
+            st.download_button("🖼️ Download Length Chart (.png)", fig_to_bytes(fig_len), "chart.png")
 
-                # ── ROUGE scores ──────────────────────────────────────────────
-                if ref_summary.strip():
-                    st.markdown("---")
-                    st.markdown("#### 📐 ROUGE Evaluation")
-                    rouge_ext = compute_rouge(ext_summary, ref_summary)
-                    rouge_abs = compute_rouge(abs_summary, ref_summary)
+        if st.session_state['ref_summary'].strip():
+            st.markdown("---")
+            st.markdown("#### 📐 ROUGE Score Comparison")
+            r_ext = compute_rouge(st.session_state['ext_summary'], st.session_state['ref_summary'])
+            r_abs = compute_rouge(st.session_state['abs_summary'], st.session_state['ref_summary'])
+            
+            fig_rouge = plot_rouge_scores({"Extractive": r_ext, "Abstractive": r_abs})
+            st.pyplot(fig_rouge)
+            
+            cols = st.columns(2)
+            with cols[0]:
+                st.caption("Extractive Scores")
+                st.dataframe(rouge_scores_to_df(r_ext), use_container_width=True)
+            with cols[1]:
+                st.caption("Abstractive Scores")
+                st.dataframe(rouge_scores_to_df(r_abs), use_container_width=True)
 
-                    r_col1, r_col2 = st.columns(2)
-                    with r_col1:
-                        st.markdown("**Extractive ROUGE**")
-                        st.dataframe(rouge_scores_to_df(rouge_ext))
-                    with r_col2:
-                        st.markdown("**Abstractive ROUGE**")
-                        st.dataframe(rouge_scores_to_df(rouge_abs))
-
-                    fig_rouge = plot_rouge_scores(
-                        {"extractive": rouge_ext, "abstractive": rouge_abs}
-                    )
-                    st.pyplot(fig_rouge)
-                    plt.close(fig_rouge)
-
-                # ── Length comparison chart ───────────────────────────────────
-                st.markdown("---")
-                st.markdown("#### 📊 Summary Length Comparison")
-                fig_len = plot_summary_length_comparison(user_text, ext_summary, abs_summary)
-                st.pyplot(fig_len)
-
-                st.download_button(
-                    "⬇️ Download Chart (PNG)",
-                    data=fig_to_bytes(fig_len),
-                    file_name="length_comparison.png",
-                    mime="image/png",
-                )
-                plt.close(fig_len)
-
-        else:
-            st.info("👈 Enter your text and press **Generate Summary** to begin.")
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center; color: #888aaa; font-size: 0.8rem;'>"
+    "AutoSummarize AI v2.0 | Powered by HuggingFace T5 & NLTK | Professional Edition"
+    "</div>", 
+    unsafe_allow_html=True
+)

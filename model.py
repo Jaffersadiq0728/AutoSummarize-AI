@@ -5,6 +5,11 @@ from collections import defaultdict
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+
 from preprocessing import (
     clean_text,
     get_sentence_list,
@@ -12,6 +17,26 @@ from preprocessing import (
     remove_stopwords,
     tokenize_words,
 )
+
+def download_nltk_resources():
+    """Downloads necessary NLTK resources if not already present."""
+    resources = ["punkt", "stopwords", "wordnet"]
+    for resource in resources:
+        try:
+            nltk.data.find(f"tokenizers/{resource}")
+        except (LookupError, AttributeError):
+            print(f"Downloading NLTK resource: {resource}...")
+            try:
+                nltk.download(resource, quiet=True)
+            except Exception as e:
+                print(f"Error downloading NLTK resource {resource}: {e}")
+
+# Ensure resources are available
+download_nltk_resources()
+
+STOP_WORDS = set(stopwords.words("english"))
+stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
 
 class ExtractiveSummarizer:
     def __init__(self, num_sentences: int = 3):
@@ -41,7 +66,7 @@ class ExtractiveSummarizer:
 
         return scores
 
-    def summarize(self, text: str, num_sentences: int = None) -> str:
+    def summarize(self, text: str, num_sentences: int | None = None) -> str:
         n = num_sentences or self.num_sentences
         sentences = get_sentence_list(text)
 
@@ -79,17 +104,22 @@ class AbstractiveSummarizer:
                 
                 print(f"[model] Loading T5-small into {CACHE_DIR.absolute()} …")
                 
-                self._tokenizer = T5Tokenizer.from_pretrained(
-                    self.MODEL_NAME, 
-                    cache_dir=str(CACHE_DIR.absolute()),
-                    legacy=False
-                )
-                self._model = T5ForConditionalGeneration.from_pretrained(
-                    self.MODEL_NAME, 
-                    cache_dir=str(CACHE_DIR.absolute())
-                )
-                print("[model] T5-small loaded successfully.")
+                try:
+                    self._tokenizer = T5Tokenizer.from_pretrained(
+                        self.MODEL_NAME, 
+                        cache_dir=str(CACHE_DIR.absolute()),
+                        legacy=False
+                    )
+                    self._model = T5ForConditionalGeneration.from_pretrained(
+                        self.MODEL_NAME, 
+                        cache_dir=str(CACHE_DIR.absolute())
+                    )
+                    print("[model] T5-small loaded successfully.")
+                except Exception as e:
+                    print(f"[model] ERROR loading T5-small: {e}")
+                    raise RuntimeError(f"Failed to load T5 model: {e}")
             except ImportError as e:
+                print(f"[model] ImportError: {e}")
                 raise e
         return self._model, self._tokenizer
 
